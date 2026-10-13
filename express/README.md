@@ -1,8 +1,10 @@
 # Express backend structure
 
-A small, layered starting point for this API. These folders contain placeholders,
-not a new implementation. Existing `index.js`, package scripts and dependencies
-remain unchanged; the application does not load `src/` yet.
+A small, layered starting point for this API. It now wires the core plumbing:
+`src/app.js` builds the app, `src/server.js` listens, `src/config/env.js` validates
+environment settings and `src/routes` serves `GET /` plus a `GET /health` check.
+Feature layers (`controllers`, `services`, `repositories`, `validators`) still hold
+placeholders for the lead qualification and Python integration to come.
 
 Express has [no prescribed folder structure](https://expressjs.com/en/starter/faq/)
 and does not choose a database or authentication scheme. This layout is a project
@@ -12,22 +14,25 @@ convention, not an Express standard or a security certification.
 
 ```text
 express/
-|-- index.js                  # Existing entry point, unchanged
-|-- package.json              # Existing package configuration, unchanged
-|-- package-lock.json         # Existing dependency lockfile, unchanged
+|-- index.js                  # Entry point: requires src/server.js
+|-- package.json              # Package configuration
+|-- package-lock.json         # Dependency lockfile
+|-- .env.example              # Environment variable template (copy to .env)
 |-- src/
-|   |-- config/
-|   |-- routes/
+|   |-- app.js                # Builds the Express app (no listen)
+|   |-- server.js             # Listens and handles shutdown
+|   |-- config/               # Validated environment settings
+|   |-- routes/               # express.Router() definitions
 |   |-- controllers/
 |   |-- services/
 |   |-- repositories/
-|   |-- middlewares/
+|   |-- middlewares/          # notFound and error handlers
 |   `-- validators/
 |-- database/
 |   `-- migrations/
 |-- tests/
 |   |-- unit/
-|   `-- integration/
+|   `-- integration/          # Health/404 smoke tests
 `-- docs/
     `-- security.md
 ```
@@ -61,9 +66,9 @@ Remove a placeholder when adding the first real file to that folder.
 4. Mount the router, then a not-found handler, then the four-argument error handler.
    [Express middleware executes in registration order](https://expressjs.com/en/guide/using-middleware/).
 
-When implementing this wiring, a possible next step is `src/app.js` for app
-construction and `src/server.js` for listening/shutdown. **Neither exists yet**;
-do not change package scripts until that implementation is tested.
+`src/app.js` builds the app and `src/server.js` handles listening/shutdown; both
+exist and `index.js` requires the server. `npm test` runs the `node:test` suite,
+which covers the health check and the not-found handler.
 
 Layered folders keep a small API easy to navigate. If related feature files
 become scattered as it grows, co-locate them by feature while preserving these
