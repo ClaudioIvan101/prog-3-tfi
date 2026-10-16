@@ -1,4 +1,5 @@
 const { Router } = require("express");
+const getHealth = require("../controllers/healthController");
 
 const router = Router();
 
@@ -8,11 +9,6 @@ router.get("/", (req, res) => {
 });
 
 // Health check para deploy y monitoreo.
-router.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-    uptime: process.uptime(),
-  });
-});
+router.get("/health", getHealth);
 
 module.exports = router;
