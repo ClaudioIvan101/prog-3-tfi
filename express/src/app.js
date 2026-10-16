@@ -6,6 +6,7 @@ const errorHandler = require("./middlewares/errorHandler");
 
 // Construye la app sin levantarla, para poder testearla.
 const app = express();
+app.disable("x-powered-by");
 
 app.use(express.json({ limit: "100kb" }));
 
