@@ -8,6 +8,12 @@ const errorHandler = require("./middlewares/errorHandler");
 const app = express();
 app.disable("x-powered-by");
 
+// Evita que el navegador infiera otro tipo de contenido, incluso ante errores.
+app.use((req, res, next) => {
+  res.set("X-Content-Type-Options", "nosniff");
+  next();
+});
+
 app.use(express.json({ limit: "100kb" }));
 
 app.use(routes);
