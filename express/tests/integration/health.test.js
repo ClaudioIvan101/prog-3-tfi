@@ -17,6 +17,7 @@ after(() => server.close());
 test("GET /health responde 200 con status ok", async () => {
   const res = await fetch(`${baseUrl}/health`);
   assert.equal(res.status, 200);
+  assert.equal(res.headers.get("cache-control"), "no-store");
 
   const body = await res.json();
   assert.equal(body.status, "ok");
