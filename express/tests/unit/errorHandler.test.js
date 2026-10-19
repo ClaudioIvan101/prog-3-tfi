@@ -40,3 +40,16 @@ test("ordinary client errors retain their existing response contract", () => {
   assert.equal(res.statusCode, 422);
   assert.deepEqual(res.body, { error: "Invalid input" });
 });
+
+test("server error logs omit messages, stacks and attached request data", (t) => {
+  const log = t.mock.method(console, "error", () => {});
+  const error = Object.assign(new Error("token=private-value"), {
+    status: 503,
+    body: { password: "private-value" },
+  });
+
+  errorHandler(error, {}, response(), () => {});
+
+  assert.equal(log.mock.calls.length, 1);
+  assert.deepEqual(log.mock.calls[0].arguments, ["Request failed", { status: 503 }]);
+});
