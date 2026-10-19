@@ -73,6 +73,11 @@ which covers health, startup settings, errors, body limits and response headers.
 
 ## First files in use
 
+`NODE_ENV` accepts `development`, `test` or `production` and defaults to
+`development` when unset. Unsupported modes fail before listening so a typo
+cannot silently bypass production behavior. Use `NODE_ENV=production` for a
+staging deployment too; identify the deployment environment separately.
+
 | File | Responsibility |
 | --- | --- |
 | `src/controllers/healthController.js` | Return process liveness and uptime; it is not a database readiness check. |
