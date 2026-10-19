@@ -1,8 +1,15 @@
 const app = require("./app");
 const { host, port } = require("./config/env");
 
-const server = app.listen(port, host, () => {
-  console.log(`Servidor corriendo en http://localhost:${port}`);
+// Informa el puerto real o devuelve un fallo de arranque al supervisor del proceso.
+const server = app.listen(port, host, (error) => {
+  if (error) {
+    console.error(`Unable to start HTTP server: ${error.code}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log(`Server listening on port ${server.address().port}`);
 });
 
 // Apagado ordenado para no cortar requests en curso.
