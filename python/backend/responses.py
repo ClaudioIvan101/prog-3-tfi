@@ -5,7 +5,7 @@ from http import HTTPStatus
 
 
 def json_response(status, data, extra_headers=()):
-    body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+    body = json.dumps(data, ensure_ascii=False, allow_nan=False).encode("utf-8")
     headers = [
         ("Content-Type", "application/json; charset=utf-8"),
         ("Content-Length", str(len(body))),

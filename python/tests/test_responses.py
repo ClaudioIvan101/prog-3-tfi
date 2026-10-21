@@ -18,3 +18,8 @@ class ResponseTests(unittest.TestCase):
         self.assertEqual(dict(headers)["X-Content-Type-Options"], "nosniff")
         self.assertEqual(dict(headers)["Cache-Control"], "no-store")
         self.assertEqual(dict(headers)["Allow"], "GET, HEAD")
+
+    def test_non_finite_numbers_are_rejected_instead_of_invalid_json(self):
+        for value in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                json_response(200, {"value": value})
