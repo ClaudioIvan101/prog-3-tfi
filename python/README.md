@@ -16,6 +16,8 @@ Open `http://127.0.0.1:8000/health` for `{"status": "ok"}`. Stop with Ctrl+C.
 `HOST` defaults to `127.0.0.1`; `PORT` defaults to `8000` and accepts decimal
 integers from 0 to 65535. Port 0 selects an available port, printed at startup.
 Set variables in the process environment; `.env` files are not loaded.
+Invalid settings or an unavailable listening socket exit with code 1 and a short
+message instead of a traceback.
 
 ## Responsibilities
 
@@ -25,6 +27,7 @@ Set variables in the process environment; `.env` files are not loaded.
 | `backend/responses.py` | Encode JSON as UTF-8 bytes with correct length and safe headers. |
 | `backend/app.py` | Handle GET/HEAD `/health`, JSON 404 and 405 with `Allow`. |
 | `backend/__main__.py` | Start and close the development server. |
+| `backend/request_handler.py` | Omit request and HTTP parser logs containing client data. |
 | `tests/` | Cover configuration, responses, routing and real HTTP on a temporary port. |
 
 ## Limits
@@ -32,7 +35,9 @@ Set variables in the process environment; `.env` files are not loaded.
 **Development only, not a production server or security certification.**
 `wsgiref.simple_server` is single-threaded and lacks production traffic controls.
 Health reports process liveness, not database readiness. There is no database,
-authentication, business logic, TLS or rate limiting. The development server can
-log request paths: never send credentials in URLs. Keep the default loopback
+authentication, business logic, TLS or rate limiting. Access and HTTP parser logs
+are omitted to avoid exposing URL credentials; unexpected application errors may
+still print tracebacks through the standard-library server. Never send
+credentials in URLs. Keep the default loopback
 binding. Choose a maintained production server and deployment controls before
 exposing this app. No virtual environment or third-party dependency was needed.
