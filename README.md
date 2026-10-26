@@ -35,6 +35,11 @@ Este backend toma `HOST` y `PORT` del entorno del proceso; no carga `.env`.
 
 Detener cualquiera de los servidores con Ctrl+C.
 
+## Pruebas automáticas
+
+GitHub Actions ejecuta las pruebas de Express y Python en cada push y pull
+request. Los resultados aparecen en la pestaña **Actions** del repositorio.
+
 ## Documentación
 
 - [Estructura y configuración de Express](express/README.md)
