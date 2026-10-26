@@ -11,7 +11,14 @@ Express has [no prescribed folder structure](https://expressjs.com/en/starter/fa
 and does not choose a database or authentication scheme. This layout is a project
 convention, not an Express standard or a security certification.
 
-## Layout
+## Local configuration
+
+Use Node.js 22.9 or newer. From `express/`, run `npm ci`, optionally copy
+`.env.example` to `.env`, then run `npm start`. Node loads `.env` when present;
+existing process environment variables take precedence. Without that file,
+the defaults still apply. No extra package is required to load configuration.
+
+## Directory tree
 
 ```text
 express/

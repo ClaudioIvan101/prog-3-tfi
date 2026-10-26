@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "node --env-file-if-exists=.env index.js",
     "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22.9.0"
   },
   "author": "",
   "license": "ISC",
