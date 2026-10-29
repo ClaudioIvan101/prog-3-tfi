@@ -1,6 +1,6 @@
-const { test } = require("node:test");
-const assert = require("node:assert/strict");
-const app = require("../../src/app");
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import app from "../../src/app.js";
 
 test("health responses omit the Express identification header", async (t) => {
   const server = app.listen(0, "127.0.0.1");

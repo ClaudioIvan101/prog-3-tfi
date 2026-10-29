@@ -1,6 +1,6 @@
-const { test } = require("node:test");
-const assert = require("node:assert/strict");
-const getHealth = require("../../src/controllers/healthController");
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import getHealth from "../../src/controllers/healthController.js";
 
 test("health controller returns process liveness without infrastructure details", () => {
   let body;

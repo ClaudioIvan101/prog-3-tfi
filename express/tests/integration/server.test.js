@@ -1,12 +1,11 @@
-const { test } = require("node:test");
-const assert = require("node:assert/strict");
-const { spawnSync } = require("node:child_process");
-const path = require("node:path");
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 
-const serverPath = JSON.stringify(path.resolve(__dirname, "../../src/server.js"));
+const serverPath = JSON.stringify(new URL("../../src/server.js", import.meta.url).href);
 
 function runServer(script) {
-  return spawnSync(process.execPath, ["-e", script], {
+  return spawnSync(process.execPath, ["--input-type=module", "-e", script], {
     env: { ...process.env, HOST: "127.0.0.1", PORT: "0", NODE_ENV: "test" },
     encoding: "utf8",
     timeout: 5000,
@@ -15,7 +14,7 @@ function runServer(script) {
 
 test("startup reports the actual port assigned by the operating system", () => {
   const result = runServer(`
-    const server = require(${serverPath});
+    const { default: server } = await import(${serverPath});
     server.on("listening", () => {
       console.log("Actual port:", server.address().port);
       server.close();
@@ -29,10 +28,11 @@ test("startup reports the actual port assigned by the operating system", () => {
 
 test("an occupied port produces a safe startup error and a failing exit code", () => {
   const result = runServer(`
-    const blocker = require("node:net").createServer();
-    blocker.listen(0, "127.0.0.1", () => {
+    const { createServer } = await import("node:net");
+    const blocker = createServer();
+    blocker.listen(0, "127.0.0.1", async () => {
       process.env.PORT = String(blocker.address().port);
-      const server = require(${serverPath});
+      const { default: server } = await import(${serverPath});
       server.on("error", () => blocker.close());
     });
   `);

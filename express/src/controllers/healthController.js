@@ -7,4 +7,4 @@ function getHealth(req, res) {
   });
 }
 
-module.exports = getHealth;
+export default getHealth;

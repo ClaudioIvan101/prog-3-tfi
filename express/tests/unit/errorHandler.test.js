@@ -1,6 +1,6 @@
-const { test } = require("node:test");
-const assert = require("node:assert/strict");
-const errorHandler = require("../../src/middlewares/errorHandler");
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import errorHandler from "../../src/middlewares/errorHandler.js";
 
 function response() {
   return {

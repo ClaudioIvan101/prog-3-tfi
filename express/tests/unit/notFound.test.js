@@ -1,6 +1,6 @@
-const { test } = require("node:test");
-const assert = require("node:assert/strict");
-const notFound = require("../../src/middlewares/notFound");
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import notFound from "../../src/middlewares/notFound.js";
 
 test("404 responses do not reflect query-string credentials", () => {
   let status;

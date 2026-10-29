@@ -1,10 +1,11 @@
-const { test } = require("node:test");
-const assert = require("node:assert/strict");
-const { spawnSync } = require("node:child_process");
-const { mkdtempSync, writeFileSync, rmSync } = require("node:fs");
-const { tmpdir } = require("node:os");
-const path = require("node:path");
-const { scripts } = require("../../package.json");
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { readFileSync } from "node:fs";
+const { scripts } = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
 
 test("start loads an optional .env without overriding process variables", () => {
   const cwd = mkdtempSync(path.join(tmpdir(), "inmobiliaria-env-"));

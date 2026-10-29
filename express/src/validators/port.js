@@ -12,4 +12,4 @@ function parsePort(value) {
   return port;
 }
 
-module.exports = parsePort;
+export default parsePort;

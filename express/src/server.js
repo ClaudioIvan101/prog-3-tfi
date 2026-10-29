@@ -1,5 +1,6 @@
-const app = require("./app");
-const { host, port } = require("./config/env");
+import app from "./app.js";
+import env from "./config/env.js";
+const { host, port } = env;
 
 // Informa el puerto real o devuelve un fallo de arranque al supervisor del proceso.
 const server = app.listen(port, host, (error) => {
@@ -20,4 +21,4 @@ function shutdown() {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
-module.exports = server;
+export default server;

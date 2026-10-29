@@ -1,7 +1,7 @@
 // Configuracion de entorno, leida y validada en un solo lugar.
 // No guardar secretos aca: solo valores de arranque no sensibles.
 
-const parsePort = require("../validators/port");
+import parsePort from "../validators/port.js";
 const DEFAULT_HOST = "0.0.0.0";
 const nodeEnv = process.env.NODE_ENV || "development";
 
@@ -16,4 +16,4 @@ const env = {
   host: process.env.HOST || DEFAULT_HOST,
 };
 
-module.exports = env;
+export default env;

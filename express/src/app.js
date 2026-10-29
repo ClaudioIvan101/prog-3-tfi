@@ -1,8 +1,8 @@
-const express = require("express");
+import express from "express";
 
-const routes = require("./routes");
-const notFound = require("./middlewares/notFound");
-const errorHandler = require("./middlewares/errorHandler");
+import routes from "./routes/index.js";
+import notFound from "./middlewares/notFound.js";
+import errorHandler from "./middlewares/errorHandler.js";
 
 // Construye la app sin levantarla, para poder testearla.
 const app = express();
@@ -22,4 +22,4 @@ app.use(routes);
 app.use(notFound);
 app.use(errorHandler);
 
-module.exports = app;
+export default app;

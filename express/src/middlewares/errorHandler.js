@@ -20,4 +20,4 @@ function errorHandler(err, req, res, next) { // eslint-disable-line no-unused-va
   });
 }
 
-module.exports = errorHandler;
+export default errorHandler;

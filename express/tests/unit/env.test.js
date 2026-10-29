@@ -1,12 +1,11 @@
-const { test } = require("node:test");
-const assert = require("node:assert/strict");
-const { spawnSync } = require("node:child_process");
-const path = require("node:path");
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 
-const configPath = path.resolve(__dirname, "../../src/config/env.js");
+const configPath = new URL("../../src/config/env.js", import.meta.url).href;
 
 function loadPort(value) {
-  return spawnSync(process.execPath, ["-e", `console.log(require(${JSON.stringify(configPath)}).port)`], {
+  return spawnSync(process.execPath, ["--input-type=module", "-e", `console.log((await import(${JSON.stringify(configPath)})).default.port)`], {
     env: { ...process.env, PORT: value, NODE_ENV: "test" },
     encoding: "utf8",
   });
@@ -27,7 +26,7 @@ test("PORT rejects non-decimal values and values outside the valid range", () =>
 });
 
 function loadNodeEnv(value) {
-  return spawnSync(process.execPath, ["-e", `console.log(require(${JSON.stringify(configPath)}).nodeEnv)`], {
+  return spawnSync(process.execPath, ["--input-type=module", "-e", `console.log((await import(${JSON.stringify(configPath)})).default.nodeEnv)`], {
     env: { ...process.env, PORT: "0", NODE_ENV: value },
     encoding: "utf8",
   });
