@@ -11,28 +11,58 @@ jobs:
   express:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+
     defaults:
       run:
         working-directory: express
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: leadqual_test
+          POSTGRES_USER: leadqual_test
+          POSTGRES_PASSWORD: clave_ficticia_solo_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U leadqual_test -d leadqual_test"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      PGHOST: "127.0.0.1"
+      PGPORT: "5432"
+      PGDATABASE: leadqual_test
+      PGUSER: leadqual_test
+      PGPASSWORD: clave_ficticia_solo_ci
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: "22"
           cache: npm
           cache-dependency-path: express/package-lock.json
+
       - run: npm ci --ignore-scripts
       - run: npm test
 
   python:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+
     defaults:
       run:
         working-directory: python
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: "3.13"
+
       - run: python -m unittest discover -s tests -v
