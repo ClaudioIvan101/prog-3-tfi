@@ -1,12 +1,13 @@
 name: leadqual
+
 services:
   db:
     image: postgres:16
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:?}
-      POSTGRES_USER: ${POSTGRES_USER:?}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: "${POSTGRES_DB:?Falta POSTGRES_DB}"
+      POSTGRES_USER: "${POSTGRES_USER:?Falta POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -18,15 +19,36 @@ services:
       retries: 10
       start_period: 10s
 
+  core-api:
+    build:
+      context: ./express
+    init: true
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "3000"
+      NODE_ENV: development
+      PGHOST: db
+      PGPORT: "5432"
+      PGDATABASE: "${POSTGRES_DB:?Falta POSTGRES_DB}"
+      PGUSER: "${POSTGRES_USER:?Falta POSTGRES_USER}"
+      PGPASSWORD: "${POSTGRES_PASSWORD:?Falta POSTGRES_PASSWORD}"
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - backend
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
   mailpit:
     image: axllent/mailpit:v1.33.0
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8025:8025" # Interfaz web solo desde la computadora local
+      - "127.0.0.1:8025:8025"
     networks:
       - backend
-    # SMTP disponible para los contenedores de la red en mailpit:1025.
-    # No se publica el puerto SMTP en el host.
 
 volumes:
   postgres_data:
