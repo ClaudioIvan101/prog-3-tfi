@@ -5,3 +5,49 @@ node_modules/
 *.log
 dist/
 coverage/
+
+# Private local work plan and searchable vault snapshot.
+/Plan_de_trabajo.pdf
+/brain/Plans/
+
+# Private assignment source; not a project deliverable.
+/Requisitos.pdf
+
+# Local secrets and credential exports (keep public certificates versionable).
+.secrets/
+secrets/
+credentials.json
+credentials.*.json
+*.credentials.json
+service-account*.json
+*.key
+*private*.pem
+id_rsa
+id_ecdsa
+id_ed25519
+*.p12
+*.pfx
+*.token
+token.json
+tokens.json
+tokens/
+.npmrc.local
+.netrc
+
+# Local database files, volume exports and backups; keep migrations versionable.
+postgres_data/
+pgdata/
+volumes/
+dumps/
+backups/
+*.dump
+*.backup
+
+# Generated build and cache output.
+build/
+.cache/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
