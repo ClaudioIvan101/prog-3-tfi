@@ -1,0 +1,5 @@
+# Local layout, cache, and deleted-note state; keep notes and shared settings.
+.obsidian/workspace*.json
+.obsidian/cache/
+.obsidian/graph.json
+.trash/

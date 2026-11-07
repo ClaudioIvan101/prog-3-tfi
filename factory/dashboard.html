@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Software Factory · Production Board</title>
+<style>
+  :root { color-scheme: light; --paper: #f4f3ed; --ink: #222c29; --muted: #626d67; --line: #cdd3c9; --green: #285e49; --orange: #a44622; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 "Segoe UI", sans-serif; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, a:focus-visible { outline: 3px solid var(--green); outline-offset: 4px; }
+  a { color: var(--green); }
+  header { padding: 36px 40px 28px; border-top: 6px solid var(--green); border-bottom: 1px solid var(--line); }
+  .eyebrow, .index, .metric, .branch, .chip, .round-label, .connection, .command { font-family: Consolas, "Liberation Mono", monospace; }
+  .eyebrow { text-transform: uppercase; font-size: 11px; letter-spacing: .17em; color: var(--green); }
+  .topline { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+  h1 { margin: 6px 0; font: 46px/1.12 Georgia, serif; letter-spacing: -.035em; }
+  .intro { margin: 10px 0 0; max-width: 660px; color: var(--muted); }
+  .metric { text-align: right; white-space: nowrap; font-size: 12px; }
+  .metric strong { display: block; font-size: 36px; font-weight: 400; }
+  .connection { margin-top: 22px; font-size: 11px; color: var(--muted); }
+  .connection[data-state="offline"] { color: var(--orange); }
+  main { padding: 28px 28px 48px; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 0 12px 22px; font-size: 12px; color: var(--muted); }
+  .dot { display: inline-block; width: 7px; height: 7px; margin-right: 5px; border-radius: 50%; background: var(--green); }
+  .dot.changes { background: var(--orange); }
+  .dot.pending { background: #929c94; }
+  .board { display: grid; grid-template-columns: repeat(6, minmax(220px, 1fr)); gap: 16px; overflow-x: auto; padding: 4px 12px 22px; align-items: start; }
+  .column { min-width: 0; }
+  .column-heading { display: flex; gap: 8px; align-items: center; padding: 0 0 12px; border-bottom: 2px solid var(--line); }
+  .index { font-size: 10px; color: var(--muted); }
+  h2 { margin: 0; font-size: 13px; font-weight: 650; }
+  .count { margin-left: auto; font-size: 11px; color: var(--muted); }
+  .column.attention .column-heading { color: var(--orange); border-color: var(--orange); }
+  .empty { margin: 18px 0; font-size: 12px; color: var(--muted); }
+  .card { display: block; width: 100%; margin: 14px 0 0; padding: 16px; border: 1px solid var(--line); border-radius: 3px; text-align: left; background: #fffef9; box-shadow: 0 2px 0 #263d2c05; }
+  .card:hover { border-color: var(--green); }
+  .attention .card { border-left: 3px solid var(--orange); }
+  .job-id { display: block; margin-bottom: 7px; font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
+  .job-title { display: block; font-size: 15px; line-height: 1.35; font-weight: 600; overflow-wrap: anywhere; }
+  .branch { display: block; margin: 9px 0 14px; font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
+  .round { display: block; border-top: 1px solid #e6e8df; margin-top: 11px; padding-top: 10px; }
+  .round-label { display: block; margin-bottom: 7px; font-size: 10px; color: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { border: 1px solid #dfe3d9; padding: 2px 5px; border-radius: 2px; color: var(--muted); background: #f5f5ef; font-size: 9px; }
+  .chip.pass { border-color: #c8dccb; background: #e9f1e6; color: #285e49; }
+  .chip.changes { border-color: #ead0bd; background: #faeee2; color: #943d1c; }
+  .reason { display: block; margin-top: 11px; font-size: 12px; color: var(--orange); overflow-wrap: anywhere; }
+  .read-hint { display: block; margin-top: 12px; font-size: 10px; color: var(--green); }
+  footer { padding: 0 40px 30px; color: var(--muted); font-size: 12px; }
+  .command { padding: 3px 6px; background: #e7eae0; color: var(--ink); font-size: 11px; }
+  dialog { width: min(960px, calc(100vw - 36px)); max-height: 88vh; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: #fffef9; color: var(--ink); }
+  dialog::backdrop { background: #17271dc4; }
+  .dialog-head { display: flex; gap: 20px; justify-content: space-between; padding: 22px 24px; border-bottom: 1px solid var(--line); }
+  .dialog-head h2 { font: 25px/1.2 Georgia, serif; overflow-wrap: anywhere; }
+  .close { align-self: start; border: 1px solid var(--line); background: transparent; border-radius: 2px; padding: 4px 10px; }
+  .files { display: flex; gap: 7px; flex-wrap: wrap; padding: 16px 24px; border-bottom: 1px solid var(--line); }
+  .file { padding: 4px 8px; border: 1px solid var(--line); background: var(--paper); border-radius: 2px; font-size: 11px; }
+  .file[aria-pressed="true"] { background: var(--green); color: white; border-color: var(--green); }
+  .artifact-label { margin: 18px 24px 0; font: 11px Consolas, monospace; color: var(--muted); overflow-wrap: anywhere; }
+  pre { margin: 0; padding: 20px 24px 28px; white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.7 Consolas, "Liberation Mono", monospace; }
+  @media (max-width: 650px) { header { padding: 24px; } h1 { font-size: 37px; } main { padding: 24px 12px; } .board { grid-template-columns: repeat(6, 250px); } footer { padding: 0 24px 24px; } .metric strong { font-size: 30px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">Codex / file-based operations</div>
+  <div class="topline">
+    <div><h1>Software factory.</h1><p class="intro">One feature. Seven agents. A visible trail from specification to local merge.</p></div>
+    <div class="metric"><strong id="total">0</strong>jobs on record</div>
+  </div>
+  <div id="connection" class="connection" role="status" aria-live="polite">Connecting to board.json…</div>
+</header>
+<main>
+  <div class="legend"><span><i class="dot"></i>PASS</span><span><i class="dot changes"></i>CHANGES</span><span><i class="dot pending"></i>pending</span><span>Review barrier: all four verdicts before rework.</span></div>
+  <div id="board" class="board" aria-label="Factory job stages"></div>
+</main>
+<footer>Queue a feature with <span class="command">$factory &lt;feature&gt;</span> in Codex. This board is read-only. <a href="backlog.md">Read backlog</a>.</footer>
+<dialog id="details" aria-labelledby="detail-title">
+  <div class="dialog-head"><h2 id="detail-title">Job artifacts</h2><button id="close" class="close" type="button" aria-label="Close job details">Close</button></div>
+  <nav id="files" class="files" aria-label="Job Markdown files"></nav>
+  <p id="artifact-label" class="artifact-label"></p>
+  <pre id="artifact" aria-live="polite"></pre>
+</dialog>
+<script>
+'use strict';
+const stages = [['spec', 'Specification'], ['build', 'Build'], ['review', 'Review'],
+  ['approve', 'Approval'], ['done', 'Merged'], ['needs-human', 'Needs human']];
+const reviewers = ['security', 'ux', 'ui', 'code'];
+const labels = { security: 'Security', ux: 'UX', ui: 'UI', code: 'Code' };
+const byId = id => document.getElementById(id);
+let lastBoard = { jobs: [] };
+let previousSnapshot = '';
+let returnFocus = null;
+let artifactRequest = 0;
+let pollRequest = 0;
+const cards = new Map();
+
+function element(tag, className, text) {
+  const node = document.createElement(tag);
+  node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function validateBoard(data) {
+  if (!data || !Array.isArray(data.jobs)) throw new Error('Expected a jobs array');
+  const seen = new Set();
+  for (const job of data.jobs) {
+    if (!job || typeof job.id !== 'string' || job.id.length > 80 ||
+        !/^[0-9]{3,}-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(job.id) || seen.has(job.id)) {
+      throw new Error('Invalid or duplicate job ID');
+    }
+    seen.add(job.id);
+    if (!stages.some(([key]) => key === job.stage) || job.branch !== `factory/${job.id}`) {
+      throw new Error('Invalid job stage or branch');
+    }
+    if (job.title !== undefined && typeof job.title !== 'string') throw new Error('Invalid title');
+    if (job.reason !== undefined && typeof job.reason !== 'string') throw new Error('Invalid reason');
+    if (job.round !== undefined && (!Number.isSafeInteger(job.round) || job.round < 0 || job.round > 9999)) {
+      throw new Error('Invalid round');
+    }
+    if (job.reworks !== undefined && (!Number.isSafeInteger(job.reworks) || job.reworks < 0 || job.reworks > 9999)) {
+      throw new Error('Invalid rework count');
+    }
+    if (job.rounds !== undefined && !Array.isArray(job.rounds)) throw new Error('Invalid history');
+    const numbers = new Set();
+    for (const round of roundHistory(job)) {
+      if (!Number.isSafeInteger(round.number) || round.number < 1 || round.number > 9999 || numbers.has(round.number)) {
+        throw new Error('Invalid round number');
+      }
+      numbers.add(round.number);
+      if (!round.reviews || typeof round.reviews !== 'object' || Array.isArray(round.reviews)) {
+        throw new Error('Invalid reviews');
+      }
+      for (const [role, verdict] of Object.entries(round.reviews)) {
+        if (!reviewers.includes(role) || !['pending', 'PASS', 'CHANGES'].includes(verdict)) {
+          throw new Error('Invalid review verdict');
+        }
+      }
+    }
+  }
+  return data;
+}
+
+function roundHistory(job) {
+  return job.rounds?.length ? job.rounds : job.round > 0
+    ? [{ number: job.round, reviews: job.reviews || {} }] : [];
+}
+
+function artifactPaths(job) {
+  validateBoard({ jobs: [job] });
+  const prefix = `jobs/${job.id}/`;
+  const reworks = Array.from({ length: job.reworks || 0 }, (_, index) => index + 1);
+  return ['spec.md', 'build.md', ...roundHistory(job).flatMap(round =>
+    reviewers.map(role => `round-${round.number}/review-${role}.md`)),
+    ...reworks.flatMap(number => [`feedback-${number}.md`, `decision-before-rework-${number}.md`]), 'decision.md']
+    .map(file => prefix + file);
+}
+
+function render(board) {
+  cards.clear();
+  const columns = stages.map(([key, label], index) => {
+    const column = element('section', `column${key === 'needs-human' ? ' attention' : ''}`);
+    const jobs = board.jobs.filter(job => job.stage === key);
+    const heading = element('div', 'column-heading');
+    heading.append(element('span', 'index', String(index + 1).padStart(2, '0')),
+      element('h2', '', label), element('span', 'count', String(jobs.length)));
+    column.append(heading);
+    if (!jobs.length) column.append(element('p', 'empty', key === 'spec' && !board.jobs.length
+      ? 'No jobs yet. Add a feature in Codex.' : 'No jobs in this stage.'));
+    for (const job of jobs) {
+      const card = element('button', 'card');
+      cards.set(job.id, card);
+      card.type = 'button';
+      card.setAttribute('aria-label', `Read ${job.id}: ${job.title || job.id}`);
+      card.append(element('span', 'job-id', job.id), element('span', 'job-title', job.title || job.id),
+        element('span', 'branch', job.branch));
+      for (const round of roundHistory(job)) {
+        const row = element('span', 'round');
+        row.append(element('span', 'round-label', `ROUND ${String(round.number).padStart(2, '0')}`));
+        const chips = element('span', 'chips');
+        for (const role of reviewers) {
+          const verdict = round.reviews[role] || 'pending';
+          chips.append(element('span', `chip ${verdict.toLowerCase()}`, `${labels[role]} · ${verdict}`));
+        }
+        row.append(chips);
+        card.append(row);
+      }
+      if (job.reason) card.append(element('span', 'reason', job.reason));
+      card.append(element('span', 'read-hint', 'Read artifacts ↗'));
+      card.addEventListener('click', () => openJob(job, card));
+      column.append(card);
+    }
+    return column;
+  });
+  byId('board').replaceChildren(...columns);
+  byId('total').textContent = String(board.jobs.length);
+}
+
+async function poll() {
+  const request = ++pollRequest;
+  try {
+    if (location.protocol === 'file:') throw new Error('Serve this directory over HTTP');
+    const response = await fetch('board.json', { cache: 'no-store' });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const board = validateBoard(await response.json());
+    if (request !== pollRequest) return;
+    const snapshot = JSON.stringify(board);
+    if (snapshot !== previousSnapshot) {
+      lastBoard = board;
+      previousSnapshot = snapshot;
+      render(board);
+    }
+    byId('connection').textContent = 'Live · polling board.json every 2 seconds';
+    byId('connection').dataset.state = 'live';
+  } catch (error) {
+    if (request !== pollRequest) return;
+    byId('connection').textContent = `Offline · ${error.message}. Showing the last valid board. Serve factory/ over HTTP.`;
+    byId('connection').dataset.state = 'offline';
+  }
+}
+
+function openJob(job, trigger) {
+  returnFocus = { id: job.id, trigger };
+  byId('detail-title').textContent = `${job.id} · ${job.title || job.id}`;
+  const prefix = `jobs/${job.id}/`;
+  byId('files').replaceChildren(...artifactPaths(job).map(file => {
+    const button = element('button', 'file', file.slice(prefix.length));
+    button.type = 'button';
+    button.setAttribute('aria-pressed', 'false');
+    button.addEventListener('click', () => {
+      for (const sibling of byId('files').children) sibling.setAttribute('aria-pressed', 'false');
+      button.setAttribute('aria-pressed', 'true');
+      showArtifact(file);
+    });
+    return button;
+  }));
+  byId('details').showModal();
+  byId('close').focus();
+  const first = byId('files').children[0];
+  first.setAttribute('aria-pressed', 'true');
+  showArtifact(prefix + 'spec.md');
+}
+
+async function showArtifact(file) {
+  if (!/^jobs\/[0-9]{3,}-[a-z0-9]+(?:-[a-z0-9]+)*\/(?:spec|build|decision|feedback-[1-9][0-9]*|decision-before-rework-[1-9][0-9]*|round-[1-9][0-9]*\/review-(?:security|ux|ui|code))\.md$/.test(file)) {
+    throw new Error('Unsafe artifact path');
+  }
+  const request = ++artifactRequest;
+  byId('artifact-label').textContent = file;
+  byId('artifact').textContent = 'Loading…';
+  try {
+    const response = await fetch(file, { cache: 'no-store' });
+    let content;
+    if (response.status === 404) content = 'Not created yet. This agent may not have run.';
+    else if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    else content = await response.text();
+    if (request === artifactRequest) byId('artifact').textContent = content;
+  } catch (error) {
+    if (request === artifactRequest) byId('artifact').textContent = `Unable to load artifact: ${error.message}`;
+  }
+}
+
+byId('close').addEventListener('click', () => byId('details').close());
+byId('details').addEventListener('close', () => {
+  artifactRequest++;
+  (cards.get(returnFocus?.id) || returnFocus?.trigger)?.focus();
+});
+render(lastBoard);
+poll();
+setInterval(poll, 2000);
+</script>
+</body>
+</html>
