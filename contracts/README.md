@@ -1,6 +1,6 @@
 # Contrato Express–Python — T4
 
-**Versión 0.1.0-draft. Responsable: Martín (C). Pendiente de revisión de Claudio (T3) y Facu (consumidor Express).**
+**Versión 0.1.0-draft. Responsable: Martín (C). Monedas y conservación de datos acordadas con Claudio (T3); resto de compatibilidad y consumidor Express pendientes de revisión.**
 
 Este directorio describe una API futura. No registra rutas en Express/Python, no implementa un proveedor, no genera JWT, no conecta una BD y no ejecuta llamadas HTTP. Los ejemplos son datos sintéticos; no son un adaptador de IA falso de T7.
 
@@ -9,7 +9,7 @@ Este directorio describe una API futura. No registra rutas en Express/Python, no
 - [OpenAPI 3.1](ai-gateway.openapi.yaml): método, ruta, seguridad, encabezados, cuerpos, respuestas y ejemplos.
 - [Esquemas JSON](schemas/): JSON Schema Draft 2020-12, independientes del lenguaje.
 - [Ejemplos válidos](examples/valid/) e [inválidos](examples/invalid/): casos representativos, sin inventario duplicado.
-- [Compatibilidad pendiente con T3](T3_COMPATIBILIDAD.md): campos compartidos y decisiones que Claudio debe confirmar.
+- [Compatibilidad con T3](T3_COMPATIBILIDAD.md): decisiones confirmadas con Claudio y puntos aún pendientes.
 - [Pruebas](tests/test_contract.py): validador OpenAPI, esquemas, ejemplos y límites, sin API en ejecución.
 
 Los tests recorren todos los JSON de ambas carpetas: `valid/` debe aceptarse e `invalid/` rechazarse. El prefijo `request-`, `response-` o `error-` identifica el esquema; un prefijo desconocido hace fallar la prueba. Los errores HTTP están como ejemplos inline en OpenAPI. Los demás casos negativos se construyen en los tests a partir de un ejemplo válido, conservando sus comprobaciones sin copiar el cuerpo completo a otro archivo.
@@ -45,7 +45,7 @@ Express conserva las reglas comerciales, el puntaje y la persistencia. El superv
 | `json_schema` | Exactamente `{"$ref":"urn:leadqual:ai:result:v1"}`. Identificador de un esquema local conocido, no una URL descargable. |
 | `max_tokens` | Entero entre 1 y 2.048: límite de salida solicitado, no medición de consumo. |
 
-La representación de datos compartidos está centralizada en `lead-data.schema.json`. Los campos y límites se proponen para este borrador técnico; no son nuevas reglas inmobiliarias aprobadas ni un modelo SQL. No se incorporan intención de compra/alquiler, catálogo de propiedades o lógica comercial de operaciones.
+La representación de datos compartidos está centralizada en `lead-data.schema.json`. La moneda solo admite `ARS`, `USD` o `null`, según lo acordado con Claudio. Un monto conocido con moneda desconocida es válido: `{"monto":100000,"moneda":null}`. Ambos campos deben estar presentes en ese objeto; omitir `moneda` sigue siendo inválido. Si el monto es desconocido, se mantiene `presupuesto:null`. No se asigna ARS por defecto ni se convierte un dato desconocido en cero. Los demás campos y límites siguen como borrador técnico, no como modelo SQL ni reglas adicionales de compra/alquiler.
 
 `json_schema` conserva el campo previsto por el plan, restringido a un esquema registrado: el gateway futuro deberá resolver ese URN internamente a `result.schema.json`. Nunca debe buscar referencias proporcionadas por el lead en la red. El URI no es la ubicación del archivo. Aceptar otros esquemas exige una nueva versión/revisión del contrato.
 
@@ -67,6 +67,24 @@ Límite del cuerpo: **100 KiB (102.400 bytes UTF-8)** antes de procesarlo; error
 | `latency_ms` | Duración total de la operación, entero de 0 a 15.000 ms. No mide solo el tiempo del modelo. |
 
 Una pregunta de seguimiento se elige con `next_question_key`. Cuando no se requiere otra pregunta, es `null`; los campos faltantes pueden permanecer pendientes aunque se detenga el diálogo. La implementación futura deberá comprobar que una clave no nula corresponde a un grupo de `missing_fields`. Express puede usar plantillas propias por clave para presentar la pregunta. El ejemplo `response-follow-up.json` muestra el texto y la clave de presupuesto.
+
+Si falta la moneda de un monto conocido, `presupuesto` sigue siendo un grupo incompleto: se incluye en `missing_fields` y se puede preguntar por ARS o USD usando la clave existente `presupuesto`. No se agrega otra clave ni se asume una moneda.
+
+### Conservación de datos en la futura integración Express
+
+Regla acordada con Claudio: un `null` devuelto por Python significa que no aporta un dato nuevo; no es una orden de borrar lo conocido. Express debe conservar los valores previos, también en campos internos de contacto. `contacto:null` conserva el contacto entero y `presupuesto:null` conserva el presupuesto entero.
+
+**Monto y moneda deben tratarse juntos.** Si el monto no cambió y Python no aporta una moneda, se conserva la moneda previamente conocida. Si llega un monto distinto y la moneda correspondiente es `null`, se conserva el nuevo monto con moneda desconocida: no se le asocia automáticamente la moneda del monto anterior. Debe solicitarse aclaración.
+
+| Antes en Express | Python devuelve | Resultado esperado de la integración futura |
+| --- | --- | --- |
+| Nombre `Ana` | Nombre `null` | Conservar `Ana`. |
+| Presupuesto `80000 USD` | `presupuesto:null` | Conservar `80000 USD`. |
+| Presupuesto `80000 USD` | `{"monto":80000,"moneda":null}` | Conservar `80000 USD` al no cambiar el monto ni recibir una moneda nueva. |
+| Presupuesto `80000 USD` | `{"monto":100000,"moneda":null}` | Conservar el nuevo monto `100000`, con moneda `null`; preguntar por la moneda. |
+| Sin presupuesto conocido | `{"monto":100000,"moneda":null}` | Registrar el dato propuesto sin moneda; no asumir ARS. |
+
+Esta tabla define comportamiento futuro: **T4 no implementa ni prueba una función de combinación de datos de Express**. Los esquemas validan los cuerpos; la conservación entre turnos y la asociación correcta monto/moneda deberán implementarse y probarse en la integración, sin una combinación recursiva genérica que mezcle monedas incorrectamente.
 
 No hay campos `score`, `puntaje`, `vendedor_id`, `estado`, herramientas o acciones. Los objetos están cerrados también en niveles internos. Se rechazan propiedades extra como `__proto__`; esto valida la forma del documento, no constituye una defensa completa contra prompt injection ni un análisis de seguridad de las aplicaciones.
 
@@ -134,6 +152,6 @@ El código de error debe corresponder al HTTP; OpenAPI restringe esa corresponde
 
 ## Qué queda pendiente
 
-Claudio debe confirmar campos y representaciones con T3; Facu debe revisar el consumidor y el perfil técnico de seguridad. Solo entonces podrá congelarse la primera versión estable. No se implementan ahora proveedor, fake, cliente HTTP, endpoint, JWT, reintentos, idempotencia persistida, scoring ni asignación.
+Claudio ya confirmó monedas admitidas, información desconocida como `null`, presupuesto con moneda desconocida y conservación segura de los datos previos. Siguen pendientes la correspondencia completa de campos con T3, precisión y límites del monto, contacto y urgencia; Facu debe revisar el consumidor y el perfil técnico de seguridad. No se implementan ahora la combinación de datos en Express, proveedor, fake, cliente HTTP, endpoint, JWT, reintentos, idempotencia persistida, scoring ni asignación. La versión sigue siendo borrador.
 
 Referencias técnicas: [OpenAPI 3.1](https://spec.openapis.org/oas/v3.1.0.html), [validación JSON Schema](https://python-jsonschema.readthedocs.io/en/stable/validate/) y [validador OpenAPI](https://openapi-spec-validator.readthedocs.io/en/latest/). Se eligió OpenAPI 3.1 para compartir esquemas Draft 2020-12 sin duplicar modelos por lenguaje.

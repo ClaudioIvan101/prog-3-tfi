@@ -69,8 +69,11 @@
               "maximum": 1000000000000
             },
             "moneda": {
-              "type": "string",
-              "pattern": "^[A-Z]{3}$"
+              "enum": [
+                "ARS",
+                "USD",
+                null
+              ]
             }
           },
           "required": [

@@ -4,13 +4,16 @@
   "messages": [
     {
       "role": "lead",
-      "content": "Necesito asesoramiento inmobiliario. No tengo definido el presupuesto."
+      "content": "Necesito asesoramiento inmobiliario. Mi presupuesto es 100000, pero todavía no confirmé la moneda."
     }
   ],
   "context": {
     "contacto": null,
     "necesidades": null,
-    "presupuesto": null,
+    "presupuesto": {
+      "monto": 100000,
+      "moneda": null
+    },
     "urgencia": null
   },
   "json_schema": {
