@@ -105,7 +105,7 @@ class ContractTests(unittest.TestCase):
             with self.subTest(field=field, bad=bad):
                 self.assertFalse(check.is_valid({**original, field: bad}))
 
-    def test_response_rejects_budget_without_currency_and_invalid_email(self):
+    def test_response_rejects_missing_currency_field_and_invalid_email(self):
         check = validator("schemas/response.schema.json")
         for field, bad in (("presupuesto", {"monto": 100}),
                            ("contacto", {"nombre": None, "email": "correo-invalido", "telefono": None})):
@@ -113,6 +113,21 @@ class ContractTests(unittest.TestCase):
                 changed = read("examples/valid/response-complete.json")
                 changed["data"]["extracted_data"][field] = bad
                 self.assertFalse(check.is_valid(changed))
+
+    def test_request_and_response_accept_only_ars_usd_or_null_currency(self):
+        for kind in ("request", "response"):
+            data = read(f"examples/valid/{kind}-complete.json")
+            lead = data["context"] if kind == "request" else data["data"]["extracted_data"]
+            check = validator(f"schemas/{kind}.schema.json")
+            for currency in ("ARS", "USD", None):
+                with self.subTest(kind=kind, currency=currency):
+                    lead["presupuesto"]["moneda"] = currency
+                    self.assertTrue(check.is_valid(data))
+                    self.assertEqual(lead["presupuesto"]["moneda"], currency)
+            for currency in ("EUR", "BRL", "ars", "", 123):
+                with self.subTest(kind=kind, currency=currency):
+                    lead["presupuesto"]["moneda"] = currency
+                    self.assertFalse(check.is_valid(data))
 
     def test_closed_objects_reject_business_actions_and_prototype_properties(self):
         check = validator("schemas/response.schema.json")
@@ -131,6 +146,9 @@ class ContractTests(unittest.TestCase):
         check = validator("schemas/response.schema.json")
         data = read("examples/valid/response-follow-up.json")
         check.validate(data)
+        self.assertIsNone(data["data"]["extracted_data"]["presupuesto"]["moneda"])
+        self.assertEqual(data["data"]["next_question_key"], "presupuesto")
+        self.assertIn("presupuesto", data["data"]["missing_fields"])
         data["data"]["missing_fields"].append("presupuesto")
         self.assertFalse(check.is_valid(data))
         data["data"]["missing_fields"] = ["vendedor_id"]
