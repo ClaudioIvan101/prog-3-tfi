@@ -1,0 +1,166 @@
+"""Pruebas de documentos y fixtures; no ejecutan una API ni un proveedor."""
+
+import copy
+import json
+from pathlib import Path
+import unittest
+
+from jsonschema import Draft202012Validator, FormatChecker
+from openapi_spec_validator import OpenAPIV31SpecValidator
+from openapi_spec_validator.readers import read_from_filename
+from referencing import Registry, Resource
+from referencing.jsonschema import DRAFT202012
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SCHEMAS = list((ROOT / "schemas").glob("*.schema.json"))
+REGISTRY = Registry().with_resources(
+    (path.as_uri(), Resource.from_contents(json.loads(path.read_text(encoding="utf-8"))))
+    for path in SCHEMAS
+)
+
+
+def read(relative):
+    return json.loads((ROOT / relative).read_text(encoding="utf-8"))
+
+
+def validator(relative):
+    # Solo recursos registrados localmente: los tests no descargan referencias.
+    return Draft202012Validator(
+        {"$ref": (ROOT / relative).as_uri()},
+        registry=REGISTRY,
+        format_checker=FormatChecker(),
+    )
+
+
+class ContractTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.spec, cls.base_uri = read_from_filename(str(ROOT / "ai-gateway.openapi.yaml"))
+        cls.operation = cls.spec["paths"]["/v1/structured-completions"]["post"]
+        cls.openapi_registry = REGISTRY.with_resource(
+            (ROOT / "ai-gateway.openapi.yaml").as_uri(),
+            Resource.from_contents(cls.spec, default_specification=DRAFT202012),
+        )
+
+    def test_openapi_is_valid_with_resolved_local_references(self):
+        OpenAPIV31SpecValidator(self.spec, base_uri=self.base_uri).validate()
+
+    def test_every_json_schema_is_valid_draft_2020_12(self):
+        self.assertEqual(len(SCHEMAS), 5)
+        for path in SCHEMAS:
+            with self.subTest(schema=path.name):
+                Draft202012Validator.check_schema(json.loads(path.read_text(encoding="utf-8")))
+
+    def test_manifest_covers_every_body_fixture_and_expected_outcome(self):
+        manifest = read("examples/manifest.json")
+        files = [case["file"] for case in manifest]
+        self.assertEqual(len(files), len(set(files)))
+        actual = {str(path.relative_to(ROOT)).replace("\\", "/")
+                  for folder in ("valid", "invalid")
+                  for path in (ROOT / "examples" / folder).glob("*.json")}
+        self.assertEqual(set(files), actual)
+        for case in manifest:
+            with self.subTest(file=case["file"], reason=case["reason"]):
+                errors = list(validator(case["schema"]).iter_errors(read(case["file"])))
+                self.assertEqual(not errors, case["valid"], "\n".join(e.message for e in errors))
+
+    def test_openapi_examples_match_their_response_status_and_schema(self):
+        request = self.operation["requestBody"]["content"]["application/json"]
+        self.assertEqual(request["schema"]["$ref"], "./schemas/request.schema.json")
+        self._validate_examples(request, validator("schemas/request.schema.json"))
+        for status, response in self.operation["responses"].items():
+            media = response["content"]["application/json"]
+            # El esquema del error está compuesto con el código específico del estado.
+            # Resolverlo desde la URI del documento mantiene las referencias relativas.
+            pointer = f"#/paths/~1v1~1structured-completions/post/responses/{status}/content/application~1json/schema"
+            check = Draft202012Validator(
+                {"$ref": (ROOT / "ai-gateway.openapi.yaml").as_uri() + pointer},
+                registry=self.openapi_registry, format_checker=FormatChecker(),
+            )
+            self._validate_examples(media, check)
+            if status != "200":
+                wrong = copy.deepcopy(read(next(iter(media["examples"].values()))["externalValue"]))
+                wrong["error"]["code"] = "INVALID_REQUEST" if status != "400" else "FORBIDDEN"
+                self.assertFalse(check.is_valid(wrong), f"HTTP {status} aceptó un código ajeno")
+
+    def _validate_examples(self, media, check):
+        for name, example in media["examples"].items():
+            with self.subTest(example=name):
+                check.validate(read(example["externalValue"]))
+
+    def test_unknown_data_stays_null_but_known_zero_is_allowed(self):
+        check = validator("schemas/lead-data.schema.json")
+        check.validate({"contacto": None, "necesidades": None, "presupuesto": None, "urgencia": None})
+        data = read("examples/valid/response-complete.json")["data"]["extracted_data"]
+        data["presupuesto"]["monto"] = 0
+        check.validate(data)
+        data["presupuesto"]["monto"] = -1
+        self.assertFalse(check.is_valid(data))
+
+    def test_request_limits_and_no_caller_supplied_system_instructions(self):
+        check = validator("schemas/request.schema.json")
+        original = read("examples/valid/request-partial.json")
+        for field, bad in (("max_tokens", 0), ("max_tokens", 2049),
+                           ("max_tokens", 1.5), ("messages", [])):
+            with self.subTest(field=field, bad=bad):
+                changed = copy.deepcopy(original)
+                changed[field] = bad
+                self.assertFalse(check.is_valid(changed))
+        changed = copy.deepcopy(original)
+        changed["messages"] = original["messages"] * 41
+        self.assertFalse(check.is_valid(changed))
+        changed["messages"] = [{"role": "lead", "content": " "}]
+        self.assertFalse(check.is_valid(changed))
+
+    def test_closed_objects_reject_business_actions_and_prototype_properties(self):
+        check = validator("schemas/response.schema.json")
+        original = read("examples/valid/response-complete.json")
+        for property_name in ("score", "puntaje", "vendedor_id", "estado", "__proto__", "constructor"):
+            for location in ((), ("data",), ("data", "extracted_data")):
+                with self.subTest(property=property_name, location=location):
+                    changed = copy.deepcopy(original)
+                    target = changed
+                    for key in location:
+                        target = target[key]
+                    target[property_name] = "no permitido"
+                    self.assertFalse(check.is_valid(changed))
+
+    def test_follow_up_catalog_and_unique_missing_fields(self):
+        check = validator("schemas/response.schema.json")
+        data = read("examples/valid/response-follow-up.json")
+        check.validate(data)
+        data["data"]["missing_fields"].append("presupuesto")
+        self.assertFalse(check.is_valid(data))
+        data["data"]["missing_fields"] = ["vendedor_id"]
+        self.assertFalse(check.is_valid(data))
+
+    def test_required_headers_formats_and_security_are_documented(self):
+        self.assertEqual(self.spec["security"], [{"serviceJwt": []}])
+        self.assertEqual(self.spec["components"]["securitySchemes"]["serviceJwt"]["scheme"], "bearer")
+        params = {p["name"]: p for p in self.operation["parameters"]}
+        self.assertEqual(set(params), {"Idempotency-Key", "X-Request-Id", "X-Deadline"})
+        schemas = {name: p["schema"] for name, p in params.items()}
+        self.assertTrue(all(p["required"] and p["in"] == "header" for p in params.values()))
+        check = Draft202012Validator(
+            {"type": "object", "properties": schemas, "required": list(schemas)},
+            format_checker=FormatChecker(),
+        )
+        valid = {"Idempotency-Key": "operacion-001", "X-Request-Id": "8e76b390-b948-4a72-9db7-82af3325c910",
+                 "X-Deadline": "2026-11-08T15:00:15Z"}
+        check.validate(valid)
+        for name, bad in (("Idempotency-Key", ""), ("X-Request-Id", "no-es-uuid"),
+                          ("X-Deadline", "ayer"), ("X-Deadline", "2026-11-08T15:00:15-03:00")):
+            with self.subTest(header=name):
+                self.assertFalse(check.is_valid({**valid, name: bad}))
+                missing = dict(valid)
+                del missing[name]
+                self.assertFalse(check.is_valid(missing))
+
+    def test_no_provider_or_business_paths_are_declared(self):
+        self.assertEqual(set(self.spec["paths"]), {"/v1/structured-completions"})
+        self.assertEqual(set(self.spec["paths"]["/v1/structured-completions"]), {"post"})
+
+
+if __name__ == "__main__":
+    unittest.main()

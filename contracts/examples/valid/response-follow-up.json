@@ -1,0 +1,24 @@
+{
+  "data": {
+    "assistant_message": "¿Qué presupuesto y moneda tenés previstos?",
+    "extracted_data": {
+      "contacto": null,
+      "necesidades": "Asesoramiento inmobiliario",
+      "presupuesto": null,
+      "urgencia": null
+    },
+    "summary": "El interesado solicita asesoramiento. Contacto, presupuesto y urgencia aún desconocidos.",
+    "next_question_key": "presupuesto",
+    "missing_fields": [
+      "contacto",
+      "presupuesto",
+      "urgencia"
+    ]
+  },
+  "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0
+  },
+  "model": "contract-example-not-a-provider",
+  "latency_ms": 0
+}
