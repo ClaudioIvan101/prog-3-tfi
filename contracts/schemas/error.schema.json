@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Error HTTP uniforme",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "enum": [
+            "INVALID_REQUEST",
+            "UNAUTHENTICATED",
+            "FORBIDDEN",
+            "IDEMPOTENCY_CONFLICT",
+            "PAYLOAD_TOO_LARGE",
+            "RATE_LIMITED",
+            "INVALID_PROVIDER_RESPONSE",
+            "SERVICE_UNAVAILABLE",
+            "DEADLINE_EXCEEDED",
+            "INTERNAL_ERROR"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300,
+          "pattern": "\\S"
+        },
+        "request_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "request_id"
+      ]
+    }
+  },
+  "required": [
+    "error"
+  ]
+}

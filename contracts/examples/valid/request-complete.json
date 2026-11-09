@@ -1,0 +1,31 @@
+{
+  "task": "real_estate_assistance",
+  "lane": "live",
+  "messages": [
+    {
+      "role": "assistant",
+      "content": "¿Qué tipo de ayuda inmobiliaria necesitás?"
+    },
+    {
+      "role": "lead",
+      "content": "Busco una vivienda en Resistencia. Mi presupuesto es de 80000 USD y quisiera resolverlo este mes."
+    }
+  ],
+  "context": {
+    "contacto": {
+      "nombre": "Ana Ejemplo",
+      "email": "ana@example.invalid",
+      "telefono": "+54 000 0000000"
+    },
+    "necesidades": "Vivienda en Resistencia",
+    "presupuesto": {
+      "monto": 80000,
+      "moneda": "USD"
+    },
+    "urgencia": "Este mes"
+  },
+  "json_schema": {
+    "$ref": "urn:leadqual:ai:result:v1"
+  },
+  "max_tokens": 1024
+}

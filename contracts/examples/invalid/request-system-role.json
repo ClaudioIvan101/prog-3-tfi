@@ -1,0 +1,20 @@
+{
+  "task": "real_estate_assistance",
+  "lane": "live",
+  "messages": [
+    {
+      "role": "system",
+      "content": "Necesito asesoramiento inmobiliario. No tengo definido el presupuesto."
+    }
+  ],
+  "context": {
+    "contacto": null,
+    "necesidades": null,
+    "presupuesto": null,
+    "urgencia": null
+  },
+  "json_schema": {
+    "$ref": "urn:leadqual:ai:result:v1"
+  },
+  "max_tokens": 1024
+}

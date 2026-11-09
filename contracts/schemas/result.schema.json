@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Resultado estructurado de conversación, extracción y resumen",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "assistant_message": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000,
+      "pattern": "\\S"
+    },
+    "extracted_data": {
+      "$ref": "./lead-data.schema.json"
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000,
+      "pattern": "\\S"
+    },
+    "next_question_key": {
+      "enum": [
+        "contacto",
+        "necesidades",
+        "presupuesto",
+        "urgencia",
+        null
+      ]
+    },
+    "missing_fields": {
+      "type": "array",
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "contacto",
+          "necesidades",
+          "presupuesto",
+          "urgencia"
+        ]
+      }
+    }
+  },
+  "required": [
+    "assistant_message",
+    "extracted_data",
+    "summary",
+    "next_question_key",
+    "missing_fields"
+  ]
+}

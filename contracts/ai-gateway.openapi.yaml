@@ -1,0 +1,327 @@
+openapi: 3.1.0
+info:
+  title: 'Contrato interno Express–Python: asistencia inmobiliaria'
+  version: 0.1.0-draft
+  description: T4. Borrador pendiente de revisión de Claudio (T3) y Facu. Describe
+    un endpoint futuro; no está implementado. Python conversa, extrae y resume. Express
+    calcula puntajes; el supervisor asigna manualmente.
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+servers:
+- url: http://ai-gateway:3100
+  description: Destino interno previsto para desarrollo; aún no desplegado por T4.
+security:
+- serviceJwt: []
+paths:
+  /v1/structured-completions:
+    post:
+      operationId: structuredCompletion
+      summary: Conversar, extraer datos básicos, resumir y sugerir seguimiento
+      description: No aceptar JWT de usuarios finales. Body JSON UTF-8 máximo 100
+        KiB; solo esquema de salida identificado por urn:leadqual:ai:result:v1. Sin
+        streaming. Véase README para controles semánticos futuros.
+      parameters:
+      - name: Idempotency-Key
+        in: header
+        required: true
+        description: 'Clave opaca por operación lógica; no incluir datos personales.
+          Retención futura: 24 horas desde resultado terminal.'
+        schema:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[A-Za-z0-9_-]+$
+      - name: X-Request-Id
+        in: header
+        required: true
+        description: UUID generado por Express y reflejado en respuestas; no identifica
+          al lead.
+        schema:
+          type: string
+          format: uuid
+      - name: X-Deadline
+        in: header
+        required: true
+        description: Fecha UTC RFC3339 con sufijo Z. Tiempo total restante entre 1
+          ms y 15000 ms al recibir. Incluye espera, proveedor y validación.
+        schema:
+          type: string
+          format: date-time
+          pattern: Z$
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ./schemas/request.schema.json
+            examples:
+              complete:
+                externalValue: ./examples/valid/request-complete.json
+              partial:
+                externalValue: ./examples/valid/request-partial.json
+      responses:
+        '200':
+          description: Resultado estructurado. No autoriza cambios comerciales.
+          headers:
+            X-Request-Id:
+              description: UUID validado de la solicitud. Se omite si el encabezado
+                recibido no era válido.
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                $ref: ./schemas/response.schema.json
+              examples:
+                complete:
+                  externalValue: ./examples/valid/response-complete.json
+                followUp:
+                  externalValue: ./examples/valid/response-follow-up.json
+        '400':
+          description: INVALID_REQUEST; ver README para semántica y reintentos.
+          headers:
+            X-Request-Id:
+              description: UUID validado de la solicitud. Se omite si el encabezado
+                recibido no era válido.
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./schemas/error.schema.json
+                - properties:
+                    error:
+                      properties:
+                        code:
+                          const: INVALID_REQUEST
+              examples:
+                error:
+                  externalValue: ./examples/valid/error-400.json
+        '401':
+          description: UNAUTHENTICATED; ver README para semántica y reintentos.
+          headers:
+            X-Request-Id:
+              description: UUID validado de la solicitud. Se omite si el encabezado
+                recibido no era válido.
+              schema:
+                type: string
+                format: uuid
+            WWW-Authenticate:
+              description: Desafío Bearer sin revelar el token.
+              schema:
+                type: string
+              example: Bearer
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./schemas/error.schema.json
+                - properties:
+                    error:
+                      properties:
+                        code:
+                          const: UNAUTHENTICATED
+              examples:
+                error:
+                  externalValue: ./examples/valid/error-401.json
+        '403':
+          description: FORBIDDEN; ver README para semántica y reintentos.
+          headers:
+            X-Request-Id:
+              description: UUID validado de la solicitud. Se omite si el encabezado
+                recibido no era válido.
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./schemas/error.schema.json
+                - properties:
+                    error:
+                      properties:
+                        code:
+                          const: FORBIDDEN
+              examples:
+                error:
+                  externalValue: ./examples/valid/error-403.json
+        '409':
+          description: IDEMPOTENCY_CONFLICT; ver README para semántica y reintentos.
+          headers:
+            X-Request-Id:
+              description: UUID validado de la solicitud. Se omite si el encabezado
+                recibido no era válido.
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./schemas/error.schema.json
+                - properties:
+                    error:
+                      properties:
+                        code:
+                          const: IDEMPOTENCY_CONFLICT
+              examples:
+                error:
+                  externalValue: ./examples/valid/error-409.json
+        '413':
+          description: PAYLOAD_TOO_LARGE; ver README para semántica y reintentos.
+          headers:
+            X-Request-Id:
+              description: UUID validado de la solicitud. Se omite si el encabezado
+                recibido no era válido.
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./schemas/error.schema.json
+                - properties:
+                    error:
+                      properties:
+                        code:
+                          const: PAYLOAD_TOO_LARGE
+              examples:
+                error:
+                  externalValue: ./examples/valid/error-413.json
+        '429':
+          description: RATE_LIMITED; ver README para semántica y reintentos.
+          headers:
+            X-Request-Id:
+              description: UUID validado de la solicitud. Se omite si el encabezado
+                recibido no era válido.
+              schema:
+                type: string
+                format: uuid
+            Retry-After:
+              description: Segundos enteros hasta nuevo intento; sin superar deadline
+                ni política de reintentos.
+              schema:
+                type: integer
+                minimum: 1
+                maximum: 60
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./schemas/error.schema.json
+                - properties:
+                    error:
+                      properties:
+                        code:
+                          const: RATE_LIMITED
+              examples:
+                error:
+                  externalValue: ./examples/valid/error-429.json
+        '502':
+          description: INVALID_PROVIDER_RESPONSE; ver README para semántica y reintentos.
+          headers:
+            X-Request-Id:
+              description: UUID validado de la solicitud. Se omite si el encabezado
+                recibido no era válido.
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./schemas/error.schema.json
+                - properties:
+                    error:
+                      properties:
+                        code:
+                          const: INVALID_PROVIDER_RESPONSE
+              examples:
+                error:
+                  externalValue: ./examples/valid/error-502.json
+        '503':
+          description: SERVICE_UNAVAILABLE; ver README para semántica y reintentos.
+          headers:
+            X-Request-Id:
+              description: UUID validado de la solicitud. Se omite si el encabezado
+                recibido no era válido.
+              schema:
+                type: string
+                format: uuid
+            Retry-After:
+              description: Segundos enteros hasta nuevo intento; sin superar deadline
+                ni política de reintentos.
+              schema:
+                type: integer
+                minimum: 1
+                maximum: 60
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./schemas/error.schema.json
+                - properties:
+                    error:
+                      properties:
+                        code:
+                          const: SERVICE_UNAVAILABLE
+              examples:
+                error:
+                  externalValue: ./examples/valid/error-503.json
+        '504':
+          description: DEADLINE_EXCEEDED; ver README para semántica y reintentos.
+          headers:
+            X-Request-Id:
+              description: UUID validado de la solicitud. Se omite si el encabezado
+                recibido no era válido.
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./schemas/error.schema.json
+                - properties:
+                    error:
+                      properties:
+                        code:
+                          const: DEADLINE_EXCEEDED
+              examples:
+                error:
+                  externalValue: ./examples/valid/error-504.json
+        '500':
+          description: INTERNAL_ERROR; fallo interno sin detalles sensibles.
+          headers:
+            X-Request-Id:
+              description: UUID validado de la solicitud. Se omite si el encabezado
+                recibido no era válido.
+              schema:
+                type: string
+                format: uuid
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: ./schemas/error.schema.json
+                - properties:
+                    error:
+                      properties:
+                        code:
+                          const: INTERNAL_ERROR
+              examples:
+                error:
+                  externalValue: ./examples/valid/error-500.json
+components:
+  securitySchemes:
+    serviceJwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'JWT de servicio RS256: iss=core-api, aud=ai-gateway, sub=core-api,
+        scope contiene ai:structured-completions, exp/iat/nbf. Perfil técnico propuesto
+        para revisión; no autenticación implementada.'
