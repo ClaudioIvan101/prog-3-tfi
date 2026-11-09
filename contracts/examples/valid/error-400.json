@@ -1,7 +1,0 @@
-{
-  "error": {
-    "code": "INVALID_REQUEST",
-    "message": "No se pudo completar la solicitud.",
-    "request_id": null
-  }
-}

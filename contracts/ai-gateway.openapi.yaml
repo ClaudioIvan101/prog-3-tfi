@@ -98,7 +98,11 @@ paths:
                           const: INVALID_REQUEST
               examples:
                 error:
-                  externalValue: ./examples/valid/error-400.json
+                  value:
+                    error:
+                      code: INVALID_REQUEST
+                      message: No se pudo completar la solicitud.
+                      request_id: null
         '401':
           description: UNAUTHENTICATED; ver README para semántica y reintentos.
           headers:
@@ -125,7 +129,11 @@ paths:
                           const: UNAUTHENTICATED
               examples:
                 error:
-                  externalValue: ./examples/valid/error-401.json
+                  value:
+                    error:
+                      code: UNAUTHENTICATED
+                      message: No se pudo completar la solicitud.
+                      request_id: 8e76b390-b948-4a72-9db7-82af3325c910
         '403':
           description: FORBIDDEN; ver README para semántica y reintentos.
           headers:
@@ -147,7 +155,11 @@ paths:
                           const: FORBIDDEN
               examples:
                 error:
-                  externalValue: ./examples/valid/error-403.json
+                  value:
+                    error:
+                      code: FORBIDDEN
+                      message: No se pudo completar la solicitud.
+                      request_id: 8e76b390-b948-4a72-9db7-82af3325c910
         '409':
           description: IDEMPOTENCY_CONFLICT; ver README para semántica y reintentos.
           headers:
@@ -169,7 +181,11 @@ paths:
                           const: IDEMPOTENCY_CONFLICT
               examples:
                 error:
-                  externalValue: ./examples/valid/error-409.json
+                  value:
+                    error:
+                      code: IDEMPOTENCY_CONFLICT
+                      message: No se pudo completar la solicitud.
+                      request_id: 8e76b390-b948-4a72-9db7-82af3325c910
         '413':
           description: PAYLOAD_TOO_LARGE; ver README para semántica y reintentos.
           headers:
@@ -191,7 +207,11 @@ paths:
                           const: PAYLOAD_TOO_LARGE
               examples:
                 error:
-                  externalValue: ./examples/valid/error-413.json
+                  value:
+                    error:
+                      code: PAYLOAD_TOO_LARGE
+                      message: No se pudo completar la solicitud.
+                      request_id: 8e76b390-b948-4a72-9db7-82af3325c910
         '429':
           description: RATE_LIMITED; ver README para semántica y reintentos.
           headers:
@@ -220,7 +240,11 @@ paths:
                           const: RATE_LIMITED
               examples:
                 error:
-                  externalValue: ./examples/valid/error-429.json
+                  value:
+                    error:
+                      code: RATE_LIMITED
+                      message: No se pudo completar la solicitud.
+                      request_id: 8e76b390-b948-4a72-9db7-82af3325c910
         '502':
           description: INVALID_PROVIDER_RESPONSE; ver README para semántica y reintentos.
           headers:
@@ -242,7 +266,11 @@ paths:
                           const: INVALID_PROVIDER_RESPONSE
               examples:
                 error:
-                  externalValue: ./examples/valid/error-502.json
+                  value:
+                    error:
+                      code: INVALID_PROVIDER_RESPONSE
+                      message: No se pudo completar la solicitud.
+                      request_id: 8e76b390-b948-4a72-9db7-82af3325c910
         '503':
           description: SERVICE_UNAVAILABLE; ver README para semántica y reintentos.
           headers:
@@ -271,7 +299,11 @@ paths:
                           const: SERVICE_UNAVAILABLE
               examples:
                 error:
-                  externalValue: ./examples/valid/error-503.json
+                  value:
+                    error:
+                      code: SERVICE_UNAVAILABLE
+                      message: No se pudo completar la solicitud.
+                      request_id: 8e76b390-b948-4a72-9db7-82af3325c910
         '504':
           description: DEADLINE_EXCEEDED; ver README para semántica y reintentos.
           headers:
@@ -293,7 +325,11 @@ paths:
                           const: DEADLINE_EXCEEDED
               examples:
                 error:
-                  externalValue: ./examples/valid/error-504.json
+                  value:
+                    error:
+                      code: DEADLINE_EXCEEDED
+                      message: No se pudo completar la solicitud.
+                      request_id: 8e76b390-b948-4a72-9db7-82af3325c910
         '500':
           description: INTERNAL_ERROR; fallo interno sin detalles sensibles.
           headers:
@@ -315,7 +351,11 @@ paths:
                           const: INTERNAL_ERROR
               examples:
                 error:
-                  externalValue: ./examples/valid/error-500.json
+                  value:
+                    error:
+                      code: INTERNAL_ERROR
+                      message: No se pudo completar la solicitud.
+                      request_id: 8e76b390-b948-4a72-9db7-82af3325c910
 components:
   securitySchemes:
     serviceJwt:
