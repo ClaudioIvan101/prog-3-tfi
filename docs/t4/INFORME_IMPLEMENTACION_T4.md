@@ -1,5 +1,7 @@
 # Informe de implementación T4 — Contrato Express–Python
 
+> **Registro histórico de la versión `cbbca20`, anterior a la simplificación.** Los conteos, el árbol y los bloques de código siguientes corresponden a esa versión. Para la estructura vigente consultá [el README](../../contracts/README.md) y el [informe de simplificación](INFORME_SIMPLIFICACION_T4.md). No mantener copias del código actual en este registro.
+
 **Martín (Integrante C) · Grupo 8 · Implementación: 8/11/2026 · Revisión para publicación: 9/11/2026**
 
 ## Resultado y alcance

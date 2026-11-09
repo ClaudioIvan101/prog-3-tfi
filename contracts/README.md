@@ -8,9 +8,11 @@ Este directorio describe una API futura. No registra rutas en Express/Python, no
 
 - [OpenAPI 3.1](ai-gateway.openapi.yaml): método, ruta, seguridad, encabezados, cuerpos, respuestas y ejemplos.
 - [Esquemas JSON](schemas/): JSON Schema Draft 2020-12, independientes del lenguaje.
-- [Manifiesto de ejemplos](examples/manifest.json): archivo, esquema, validez esperada y motivo de cada caso.
+- [Ejemplos válidos](examples/valid/) e [inválidos](examples/invalid/): casos representativos, sin inventario duplicado.
 - [Compatibilidad pendiente con T3](T3_COMPATIBILIDAD.md): campos compartidos y decisiones que Claudio debe confirmar.
 - [Pruebas](tests/test_contract.py): validador OpenAPI, esquemas, ejemplos y límites, sin API en ejecución.
+
+Los tests recorren todos los JSON de ambas carpetas: `valid/` debe aceptarse e `invalid/` rechazarse. El prefijo `request-`, `response-` o `error-` identifica el esquema; un prefijo desconocido hace fallar la prueba. Los errores HTTP están como ejemplos inline en OpenAPI. Los demás casos negativos se construyen en los tests a partir de un ejemplo válido, conservando sus comprobaciones sin copiar el cuerpo completo a otro archivo.
 
 Desde la raíz del repositorio, en PowerShell, con Python 3.13:
 
