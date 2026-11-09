@@ -5,7 +5,7 @@ node_modules/
 *.log
 dist/
 coverage/
-
+/guia.zip
 # Private local work plan and searchable vault snapshot.
 /Plan_de_trabajo.pdf
 /brain/Plans/

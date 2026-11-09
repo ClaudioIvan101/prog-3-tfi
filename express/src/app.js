@@ -1,24 +1,40 @@
 import express from "express";
 import routes from "./routes/index.js";
+import { createCampaignRouter } from "./routes/campaigns.js";
 import notFound from "./middlewares/notFound.js";
 import errorHandler from "./middlewares/errorHandler.js";
 
-// Construye la app sin levantarla, para poder testearla.
-const app = express();
-app.disable("x-powered-by");
+export function createApp({ campaigns } = {}) {
+  const app = express();
 
-// Evita que el navegador infiera otro tipo de contenido, incluso ante errores.
-app.use((req, res, next) => {
-  res.set("X-Content-Type-Options", "nosniff");
-  next();
-});
+  app.disable("x-powered-by");
 
-app.use(express.json({ limit: "100kb" }));
+  app.use((req, res, next) => {
+    res.set("X-Content-Type-Options", "nosniff");
+    next();
+  });
 
-app.use(routes);
+  // Primero interpretamos el JSON; después ejecutamos las rutas.
+  app.use(express.json({ limit: "100kb" }));
 
-// El orden importa: not-found y luego el error handler de 4 argumentos.
-app.use(notFound);
-app.use(errorHandler);
+  // Conservamos las rutas existentes.
+  app.use(routes);
 
-export default app;
+  if (campaigns !== undefined) {
+    app.use( "/campaigns", createCampaignRouter({
+        // El router recibe solamente la función que necesita.
+        createCampaign: campaigns.create,
+      }),
+    );
+  }
+
+  // Estos manejadores siempre quedan después de las rutas.
+  app.use(notFound);
+  app.use(errorHandler);
+
+  return app;
+}
+
+// Mantiene las pruebas generales independientes de PostgreSQL.
+// El servidor real utiliza la app preparada en composition.js.
+export default createApp();

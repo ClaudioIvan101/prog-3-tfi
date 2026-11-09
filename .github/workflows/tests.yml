@@ -48,8 +48,8 @@ jobs:
           cache-dependency-path: express/package-lock.json
 
       - run: npm ci --ignore-scripts
+      - run: npm run migrate
       - run: npm test
-
   python:
     runs-on: ubuntu-latest
     timeout-minutes: 5

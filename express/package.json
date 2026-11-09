@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "node --env-file-if-exists=.env --watch index.js",
     "start": "node --env-file-if-exists=.env index.js",
-    "test": "node --test"
+    "test": "node --test",
+    "migrate": "node-pg-migrate up -m database/migrations --no-verbose"
   },
   "engines": {
     "node": ">=22.9.0"
@@ -19,5 +20,8 @@
     "pg": "^8.23.1",
     "zod": "^4.6.7"
   },
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "node-pg-migrate": "^9.0.0"
+  }
 }

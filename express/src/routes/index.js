@@ -23,7 +23,7 @@ router.get("/users/:id", (req, res) => {
   res.status(404).send("No encontrado");
 });
 
-// User creation is not implemented yet.
+// User creation endpoint (no implementado todavia)
 router.post("/users", (req, res) => res.sendStatus(501));
 
 export default router;
