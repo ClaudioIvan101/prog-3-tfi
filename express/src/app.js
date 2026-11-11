@@ -1,10 +1,11 @@
 import express from "express";
 import routes from "./routes/index.js";
 import { createCampaignRouter } from "./routes/campaigns.js";
+import { createUserRouter } from "./routes/users.js";
 import notFound from "./middlewares/notFound.js";
 import errorHandler from "./middlewares/errorHandler.js";
 
-export function createApp({ campaigns } = {}) {
+export function createApp({ campaigns, users } = {}) {
   const app = express();
 
   app.disable("x-powered-by");
@@ -19,6 +20,10 @@ export function createApp({ campaigns } = {}) {
 
   // Conservamos las rutas existentes.
   app.use(routes);
+
+  if (users !== undefined) {
+    app.use("/users", createUserRouter(users));
+  }
 
   if (campaigns !== undefined) {
     app.use( "/campaigns", createCampaignRouter({

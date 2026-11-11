@@ -6,7 +6,9 @@ const serverPath = JSON.stringify(new URL("../../src/server.js", import.meta.url
 
 function runServer(script) {
   return spawnSync(process.execPath, ["--input-type=module", "-e", script], {
-    env: { ...process.env, HOST: "127.0.0.1", PORT: "0", NODE_ENV: "test" },
+    // El servidor compone un pool perezoso, pero estas pruebas no consultan PostgreSQL.
+    env: { ...process.env, HOST: "127.0.0.1", PORT: "0", NODE_ENV: "test",
+      PGHOST: "127.0.0.1", PGPORT: "5432", PGDATABASE: "test", PGUSER: "test", PGPASSWORD: "test" },
     encoding: "utf8",
     timeout: 5000,
   });
