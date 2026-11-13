@@ -42,3 +42,4 @@ export function createApp({ campaigns } = {}) {
 
 // Mantiene las pruebas generales independientes de PostgreSQL.
 // El servidor real utiliza la app preparada en composition.js.
+export default createApp();
