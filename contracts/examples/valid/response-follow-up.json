@@ -1,0 +1,27 @@
+{
+  "data": {
+    "assistant_message": "¿El presupuesto de 100000 está expresado en ARS o USD?",
+    "extracted_data": {
+      "contacto": null,
+      "necesidades": "Asesoramiento inmobiliario",
+      "presupuesto": {
+        "monto": 100000,
+        "moneda": null
+      },
+      "urgencia": null
+    },
+    "summary": "El interesado solicita asesoramiento y declara un presupuesto de 100000. Moneda, contacto y urgencia aún desconocidos.",
+    "next_question_key": "presupuesto",
+    "missing_fields": [
+      "contacto",
+      "presupuesto",
+      "urgencia"
+    ]
+  },
+  "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0
+  },
+  "model": "contract-example-not-a-provider",
+  "latency_ms": 0
+}

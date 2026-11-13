@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Datos inmobiliarios básicos propuestos para revisión T3",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "contacto": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "nombre": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 120,
+              "pattern": "\\S"
+            },
+            "email": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "email",
+              "maxLength": 254
+            },
+            "telefono": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 40,
+              "pattern": "\\S"
+            }
+          },
+          "required": [
+            "nombre",
+            "email",
+            "telefono"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "necesidades": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 2000,
+      "pattern": "\\S"
+    },
+    "presupuesto": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "monto": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1000000000000
+            },
+            "moneda": {
+              "enum": [
+                "ARS",
+                "USD",
+                null
+              ]
+            }
+          },
+          "required": [
+            "monto",
+            "moneda"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "urgencia": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "minLength": 1,
+      "maxLength": 300,
+      "pattern": "\\S"
+    }
+  },
+  "required": [
+    "contacto",
+    "necesidades",
+    "presupuesto",
+    "urgencia"
+  ]
+}
