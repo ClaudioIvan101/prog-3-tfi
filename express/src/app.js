@@ -19,11 +19,16 @@ export function createApp({ campaigns } = {}) {
 
   // Conservamos las rutas existentes.
   app.use(routes);
-
+    console.log("DEPENDENCIAS:", {
+  create: typeof campaigns?.create,
+  list: typeof campaigns?.list
+})
   if (campaigns !== undefined) {
-    app.use( "/campaigns", createCampaignRouter({
-        // El router recibe solamente la función que necesita.
+    
+    app.use( "/campaigns", createCampaignRouter({ 
+      // El router recibe solamente la función que necesita.
         createCampaign: campaigns.create,
+        listCampaigns: campaigns.list,
       }),
     );
   }
@@ -37,4 +42,3 @@ export function createApp({ campaigns } = {}) {
 
 // Mantiene las pruebas generales independientes de PostgreSQL.
 // El servidor real utiliza la app preparada en composition.js.
-export default createApp();
