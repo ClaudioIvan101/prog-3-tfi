@@ -23,6 +23,7 @@ const server = app.listen(port, host, (error) => {
       `Unable to start HTTP server: ${error.code ?? "UNKNOWN"}`,
     );
 
+    // El servidor no pudo arrancar, así que cerramos el pool de PostgreSQL.
     process.exitCode = 1;
     void closePool();
     return;
