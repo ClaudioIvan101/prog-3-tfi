@@ -26,9 +26,11 @@ export function createApp({ campaigns, users } = {}) {
   }
 
   if (campaigns !== undefined) {
-    app.use( "/campaigns", createCampaignRouter({
-        // El router recibe solamente la función que necesita.
+    
+    app.use( "/campaigns", createCampaignRouter({ 
+      // El router recibe solamente la función que necesita.
         createCampaign: campaigns.create,
+        listCampaigns: campaigns.list,
       }),
     );
   }

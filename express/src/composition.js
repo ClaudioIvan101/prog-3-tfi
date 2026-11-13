@@ -2,6 +2,7 @@ import { createApp } from "./app.js";
 import { createPostgresPool } from "./infra/postgres.js";
 import {createPostgresCampaignRepository} from "./infra/campaignRepository.js";
 import {makeCreateCampaign} from "./domain/campaigns/createCampaign.js";
+import {makeListCampaigns} from "./domain/campaigns/listCampaign.js";
 import { createPostgresUserRepository } from "./infra/userRepository.js";
 import { hashPassword } from "./infra/passwordHasher.js";
 import { makeCreateUser } from "./domain/users/createUser.js";
@@ -24,11 +25,13 @@ export const useCases = {
   },
   campaigns: {
     create: makeCreateCampaign({ campaignRepository }),
+    list: makeListCampaigns({ campaignRepository }),
   },
 };
 
 // Conservamos los comandos anteriores que importaban createCampaign.
 export const createCampaign = useCases.campaigns.create;
+export const listCampaigns = useCases.campaigns.list;
 
 // La aplicación recibe los módulos que ya están implementados.
 export const app = createApp(useCases);

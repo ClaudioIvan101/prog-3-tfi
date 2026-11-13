@@ -12,7 +12,7 @@ coverage/
 
 # Private assignment source; not a project deliverable.
 /Requisitos.pdf
-
+/clase-http-auth-jwt
 # Local secrets and credential exports (keep public certificates versionable).
 .secrets/
 secrets/
